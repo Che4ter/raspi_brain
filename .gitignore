@@ -1,0 +1,6 @@
+## Intellij Project Files
+.idea/
+*.iml
+
+#Binary File
+rpi_brain

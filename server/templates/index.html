@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title }}</title>
+</head>
+<body>
+<header>
+    <h1>{{ .MainHeading }}</h1>
+
+</header>
+<main>
+    <form action="/save" method="POST">
+        <div><textarea name="body" rows="20" cols="80">{{printf "%s" .Body}}</textarea></div>
+        <div><input type="submit" value="Save"></div>
+    </form>
+</main>
+<footer>
+    <img src="/static/logo.png" width="200px">
+</footer>
+
+</body>
+</html>
