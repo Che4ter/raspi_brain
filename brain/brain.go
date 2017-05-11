@@ -42,7 +42,7 @@ var states = [...]string{
 
 type State int
 
-const resendtimeoutduration = 10
+const resendtimeoutduration = 5
 const waitforstarttimeoutduration = 60
 
 // String() function will return the english name
@@ -164,14 +164,36 @@ func switchState(newState State) {
 }
 
 func sendCommandSwitchState(STATEID int) {
-	packet := arduino.ArduinoPacket{}
-	packet.SOH = configuration.SOH
-	packet.ID = configuration.SWITCH_STATE
-	packet.TYPE = configuration.REQUEST
-	packet.LENGTH = 1
-	packet.DATA = make([]int, 1)
+	packet := arduino.ArduinoPacket{
+		SOH:configuration.SOH,
+		ID:configuration.SWITCH_STATE,
+		TYPE:configuration.REQUEST,
+		LENGTH:1,
+		DATA:make([]int, 1),
+		CHECKSUM:0}
 	packet.DATA[0] = STATEID
-	packet.CHECKSUM = 0
+	sendPacket(packet)
+}
+
+func sendCommandReset(){
+	packet := arduino.ArduinoPacket{
+		SOH:configuration.SOH,
+		ID:configuration.RESET,
+		TYPE:configuration.REQUEST,
+		LENGTH:0,
+		DATA:make([]int, 0),
+		CHECKSUM:0}
+	sendPacket(packet)
+}
+
+func sendCommandStop(){
+	packet := arduino.ArduinoPacket{
+		SOH:configuration.SOH,
+		ID:configuration.STOP,
+		TYPE:configuration.REQUEST,
+		LENGTH:0,
+		DATA:make([]int, 0),
+		CHECKSUM:0}
 	sendPacket(packet)
 }
 

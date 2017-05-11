@@ -32,31 +32,6 @@ const timeoutduration = 60
 
 var arduinoSerial Arduino
 
-// sendArduinoCommand transmits a new command over the numonated serial port to the arduino. Returns an
-// error on failure. Each command is identified by a single byte and may take one argument (a float).
-func sendArduinoCommand(command byte, argument float32, serialPort io.ReadWriteCloser) error {
-	if serialPort == nil {
-		return nil
-	}
-
-	// Package argument for transmission
-	bufOut := new(bytes.Buffer)
-	err := binary.Write(bufOut, binary.LittleEndian, argument)
-	if err != nil {
-		return err
-	}
-
-	// Transmit command and argument down the pipe.
-	for _, v := range [][]byte{[]byte{command}, bufOut.Bytes()} {
-		_, err = serialPort.Write(v)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // findArduino looks for the file that represents the arduino serial connection. Returns the fully qualified path
 // to the device if we are able to find a likely candidate for an arduino, otherwise an empty string if unable to
 // find an arduino device.
