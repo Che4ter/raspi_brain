@@ -1,11 +1,8 @@
 package arduino
 
 import (
-	"bytes"
-	"encoding/binary"
 	"github.com/Che4ter/rpi_brain/configuration"
 	"github.com/tarm/serial"
-	"io"
 	"io/ioutil"
 	"log"
 	"strings"
