@@ -22,7 +22,6 @@ type ArduinoPacket struct {
 	TYPE     int
 	LENGTH   int
 	DATA     []int
-	CHECKSUM int
 }
 
 const timeoutduration = 60
@@ -109,12 +108,8 @@ func read() {
 			receivingPacket.DATA[curLocation-4] = int(buf[0])
 			curLocation++
 		} else if curLocation == (4 + receivingPacket.LENGTH) {
-			receivingPacket.CHECKSUM = int(buf[0])
-			if verifyChecksum(receivingPacket) {
-				arduinoSerial.arduinoReceivingBridge <- receivingPacket
-			} else {
-				log.Printf("Packet corrupt")
-			}
+			arduinoSerial.arduinoReceivingBridge <- receivingPacket
+
 			curLocation = 0
 			receivingPacket = ArduinoPacket{}
 		}
@@ -145,8 +140,6 @@ func sendPacket(packet ArduinoPacket) {
 	for i := 0; i < int(packet.LENGTH); i++ {
 		data[i+4] = packet.DATA[i]
 	}
-
-	data[4+packet.LENGTH] = packet.CHECKSUM
 
 	bs := make([]byte, len(data))
 

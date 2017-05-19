@@ -169,8 +169,7 @@ func sendCommandSwitchState(STATEID int) {
 		ID:configuration.SWITCH_STATE,
 		TYPE:configuration.REQUEST,
 		LENGTH:1,
-		DATA:make([]int, 1),
-		CHECKSUM:0}
+		DATA:make([]int, 1)}
 	packet.DATA[0] = STATEID
 	sendPacket(packet)
 }
@@ -181,8 +180,7 @@ func sendCommandReset(){
 		ID:configuration.RESET,
 		TYPE:configuration.REQUEST,
 		LENGTH:0,
-		DATA:make([]int, 0),
-		CHECKSUM:0}
+		DATA:make([]int, 0)}
 	sendPacket(packet)
 }
 
@@ -192,8 +190,7 @@ func sendCommandStop(){
 		ID:configuration.STOP,
 		TYPE:configuration.REQUEST,
 		LENGTH:0,
-		DATA:make([]int, 0),
-		CHECKSUM:0}
+		DATA:make([]int, 0)}
 	sendPacket(packet)
 }
 

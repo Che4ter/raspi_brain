@@ -5,7 +5,6 @@ const SOH = 0x42
 
 //IDs
 const SWITCH_STATE = 0x01
-const PING = 0x10
 const RESET = 0x11
 const STOP = 0x12
 
@@ -27,4 +26,3 @@ const STATE_OBSTACLE_RAMP = 0x29
 const STATE_MODUS_BUTTON = 0x30
 const STATE_WAIT = 0x31
 const STATE_STOP = 0x32
-const STATE_MANUAL_CONTROL = 0x33
