@@ -29,7 +29,6 @@ func GetDistanceFront() float64 {
 	return utilities.Round(float64(distance), 1)
 }
 
-
 func initUltrasonic(config configuration.Configuration) {
 	fmt.Print("init Ultrasonic Sensor")
 	fmt.Println("init echo pin on ", config.UltrasonicInPin)
@@ -38,24 +37,18 @@ func initUltrasonic(config configuration.Configuration) {
 	if err != nil {
 		panic(err)
 	}
-	UltrasonicSensor.echoPin = echoPin
 
 	fmt.Println("init trigger pin on ", config.UltrasonicOutPin)
 	triggerPin, err := embd.NewDigitalPin(config.UltrasonicOutPin)
 	if err != nil {
 		panic(err)
 	}
-	UltrasonicSensor.triggerPin = triggerPin
 
 	fmt.Println("rpi delay")
 	time.Sleep(2 * time.Second)
 
 	fmt.Println("setup ultrasonic driver")
 
-	rf := us020.New(echoPin, triggerPin, nil)
-	UltrasonicSensor.sensor = *rf
-	defer rf.Close()
-
-	fmt.Println("delay")
-	time.Sleep(1 * time.Second)
+	UltrasonicSensor.sensor = *us020.New(echoPin, triggerPin, nil)
+	defer UltrasonicSensor.sensor.Close()
 }

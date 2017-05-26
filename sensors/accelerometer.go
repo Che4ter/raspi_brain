@@ -5,6 +5,7 @@ import (
 	"github.com/Che4ter/rpi_brain/configuration"
 	"github.com/Che4ter/rpi_brain/sensors/adxl345"
 	"github.com/kidoman/embd"
+	_ "github.com/kidoman/embd/host/rpi" // This loads the RPi driver
 	"time"
 )
 
@@ -14,7 +15,7 @@ func GetOrientations() adxl345.Orientation {
 	return _orientation
 }
 
-func initAccel(config configuration.Configuration) {
+func startAccel(config configuration.Configuration) {
 	fmt.Println("init Accelerometer Sensor")
 	if err := embd.InitI2C(); err != nil {
 		panic(err)
@@ -43,5 +44,6 @@ func initAccel(config configuration.Configuration) {
 			_orientation.Z = orientation.Z
 		}
 	}
-
 }
+
+

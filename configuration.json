@@ -1,7 +1,4 @@
 {
-  "WebUi": false,
-  "WebPort": 8080,
-  
   "SerialPort": "/dev/tnt0",
   "SerialPortAutoDetect": false,
   "SerialBaudRate": 9600,
@@ -10,7 +7,10 @@
   
   "UnixSocketAddress": "/tmp/team9.sock",
   
-  "UltrasonicOutPin": 17,
-  "UltrasonicInPin": 18
+  "UltrasonicOutPin": 18,
+  "UltrasonicInPin": 17,
+
+  "StartButtonPin": 22,
+  "ToggleSwitchPin": 23
 
 }

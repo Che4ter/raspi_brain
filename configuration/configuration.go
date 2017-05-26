@@ -7,9 +7,6 @@ import (
 )
 
 type Configuration struct {
-	WebUi   bool
-	WebPort int
-
 	SerialPort           string
 	SerialPortAutoDetect bool
 	SerialBaudRate       int
@@ -22,11 +19,14 @@ type Configuration struct {
 
 	UltrasonicOutPin int
 	UltrasonicInPin  int
+
+	StartButtonPin int
+	ToggleSwitchPin int
 }
 
 func ParseConfiguration(configFile string) (configuration Configuration, err error) {
 	// Create a default configuration.
-	config := Configuration{true, 1234, "/dev/null", true, 9600, 1, "/tmp/team9.sock", 50.0, 17, 18}
+	config := Configuration{ "/dev/null", true, 9600, 1, "/tmp/team9.sock", 50.0, 18, 17, 22,23}
 
 	// Open the configuration file.
 	fmt.Println("try to open config file: ", configFile)

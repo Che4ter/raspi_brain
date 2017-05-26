@@ -14,9 +14,10 @@ type Logic struct {
 
 //virutal serial http://www.sagunpandey.com/setup-virtual-serial-ports-using-tty0tty-in-linux/
 const (
-	INITIALIZE = 1 + iota
+	INITIALIZE           = 1 + iota
 	START
 	DRIVESTRAIGHT_ONE
+	DRIVESTRAIGHT_BEFORE_CURVE
 	DRIVECURVE
 	OBSTACLESTAIR
 	OBSTACLEENTANGLEMENT
@@ -25,12 +26,14 @@ const (
 	PRESSBUTTON
 	DONE
 	IDLE
+	RESET
 )
 
 var states = [...]string{
 	"INITIALIZE",
 	"START",
 	"DRIVESTRAIGHT_ONE",
+	"DRIVESTRAIGHT_BEFORE_CURVE",
 	"DRIVECURVE",
 	"OBSTACLESTAIR",
 	"OBSTACLEENTANGLEMENT",
@@ -38,7 +41,8 @@ var states = [...]string{
 	"OBSTACLECROSSBARS",
 	"PRESSBUTTON",
 	"DONE",
-	"IDLE"}
+	"IDLE",
+	"RESET"}
 
 type State int
 
@@ -61,6 +65,7 @@ type brainStruct struct {
 }
 
 var brainData brainStruct
+var firstTime = false
 
 func StartBrain(brainBridge chan int, ipcBridge chan string, config configuration.Configuration, doneBridge chan bool, arduinoReceivingBridge chan arduino.ArduinoPacket, arduinoSendingBridge chan arduino.ArduinoPacket) {
 
@@ -73,27 +78,28 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 	switchState(INITIALIZE)
 	//https://doc.getqor.com/plugins/transition.html
 	startTime := time.Now()
+	stairPosition := 0
 	// Define initial state
 	for {
 		switch brainData.currentState {
 
 		case INITIALIZE:
+			fmt.Println("Start Initializing")
 			sensors.InitializeSensors(config)
 			orientations := sensors.GetOrientations()
 			for orientations.X == 0 && orientations.Y == 0 && orientations.Z == 0 {
 				fmt.Println("Wait for Accel Sensor Data")
 				orientations = sensors.GetOrientations()
 			}
-
-			startTime = time.Now()
-			sendCommandSwitchState(configuration.STATE_START)
+			//sendCommandSwitchState(configuration.STATE_START)
 			switchState(START)
 		case START:
-
+			if firstTime {
+				firstTime = false
+				startTime = time.Now()
+			}
 			select {
 			case datafromcamera := <-brainData.ipcBridge:
-				fmt.Println("rtest: ", datafromcamera)
-
 				if datafromcamera == "start" {
 					fmt.Println("received startsignal: ", datafromcamera)
 					switchState(DRIVESTRAIGHT_ONE)
@@ -109,41 +115,56 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			}
 
 		case DRIVESTRAIGHT_ONE:
-			//todo: send start command
-			sendCommandSwitchState(configuration.STATE_DRIVE_STRAIGHT)
-
-			for sensors.GetDistanceFront() > 10 {
-				time.Sleep(200)
+			if firstTime {
+				sendCommandSwitchState(configuration.STATE_DRIVE_STRAIGHT)
+				firstTime = false
 			}
 
-			switchState(OBSTACLESTAIR)
+			if sensors.GetDistanceFront() > 10 {
+				time.Sleep(200)
+			} else {
+				switchState(OBSTACLESTAIR)
+			}
+
 		case OBSTACLESTAIR:
-			//todo: send start command
-			sendCommandSwitchState(configuration.STATE_OBSTACLE_STAIR)
+			if firstTime {
+				sendCommandSwitchState(configuration.STATE_OBSTACLE_STAIR)
+				firstTime = false
+				stairPosition = 0
+			}
+
 			orientations := sensors.GetOrientations()
 			fmt.Println("wait for stair")
 
-			for orientations.Y < 30 {
-				time.Sleep(100 * time.Millisecond)
+			if orientations.Y > 25 {
+				time.Sleep(50 * time.Millisecond)
+				fmt.Println("on stair up")
+				stairPosition = 1
+			} else if orientations.Y < 0 {
+				time.Sleep(50 * time.Millisecond)
 				orientations = sensors.GetOrientations()
-
+				stairPosition = 2
+				fmt.Println("on stair down")
+			} else if orientations.Y > 3 && orientations.Y < 18 && stairPosition == 2 {
+				fmt.Println("stair finished")
+				switchState(DRIVESTRAIGHT_BEFORE_CURVE)
 			}
-
-			fmt.Println("on stair up")
-
-			for orientations.Y > 60 {
-				time.Sleep(100 * time.Millisecond)
-				orientations = sensors.GetOrientations()
-
+		case DRIVESTRAIGHT_BEFORE_CURVE:
+			if firstTime {
+				sendCommandSwitchState(configuration.STATE_DRIVE_STRAIGHT)
 			}
-			fmt.Println("on top of the stair")
 
 		case IDLE:
 		case DONE:
 			doneBridge <- true
 
+		case RESET:
+			fmt.Println("reset program")
+			switchState(INITIALIZE)
+
 		}
 		checkForData()
+		checkButton()
 	}
 }
 
@@ -156,41 +177,48 @@ func checkForData() {
 	}
 }
 
+func checkButton() {
+	if sensors.GetButtonStatus() == 0 {
+		switchState(RESET)
+	}
+}
+
 func switchState(newState State) {
 
 	fmt.Println("Old State:", brainData.currentState)
 	brainData.currentState = newState
 	fmt.Println("New State:", brainData.currentState)
+	firstTime = true
 }
 
 func sendCommandSwitchState(STATEID int) {
 	packet := arduino.ArduinoPacket{
-		SOH:configuration.SOH,
-		ID:configuration.SWITCH_STATE,
-		TYPE:configuration.REQUEST,
-		LENGTH:1,
-		DATA:make([]int, 1)}
+		SOH:    configuration.SOH,
+		ID:     configuration.SWITCH_STATE,
+		TYPE:   configuration.REQUEST,
+		LENGTH: 1,
+		DATA:   make([]int, 1)}
 	packet.DATA[0] = STATEID
 	sendPacket(packet)
 }
 
-func sendCommandReset(){
+func sendCommandReset() {
 	packet := arduino.ArduinoPacket{
-		SOH:configuration.SOH,
-		ID:configuration.RESET,
-		TYPE:configuration.REQUEST,
-		LENGTH:0,
-		DATA:make([]int, 0)}
+		SOH:    configuration.SOH,
+		ID:     configuration.RESET,
+		TYPE:   configuration.REQUEST,
+		LENGTH: 0,
+		DATA:   make([]int, 0)}
 	sendPacket(packet)
 }
 
-func sendCommandStop(){
+func sendCommandStop() {
 	packet := arduino.ArduinoPacket{
-		SOH:configuration.SOH,
-		ID:configuration.STOP,
-		TYPE:configuration.REQUEST,
-		LENGTH:0,
-		DATA:make([]int, 0)}
+		SOH:    configuration.SOH,
+		ID:     configuration.STOP,
+		TYPE:   configuration.REQUEST,
+		LENGTH: 0,
+		DATA:   make([]int, 0)}
 	sendPacket(packet)
 }
 
@@ -216,7 +244,7 @@ func sendPacket(packet arduino.ArduinoPacket) bool {
 				brainData.arduinoSendingBridge <- packet
 			}
 		}
-		if resendCounter >= 3 {
+		if resendCounter >= 2 {
 			fmt.Println("sending failed")
 
 			return false

@@ -13,8 +13,6 @@ import (
 )
 
 //Define Arguments
-//var argWebGui = flag.Bool("webgui", false, "use a web gui?")
-//var argWebPort = flag.Int("webport", 8885, "web gui port")
 //var argSerialPort = flag.String("serialport", "/dev/null", "ardino serial port")
 var argConfigurationFile = flag.String("config", "configuration.json", "configuration file path")
 
@@ -26,7 +24,7 @@ func init() {
 	fmt.Println("***********************")
 	fmt.Println("Pren 2 - Team 9")
 	fmt.Println("== The Caterpillar ==")
-	fmt.Println("**** v0.9 **** ")
+	fmt.Println("**** v1.0 **** ")
 	fmt.Println("***********************")
 	fmt.Println("initializing...")
 
@@ -45,7 +43,6 @@ func main() {
 
 	//Start Routines
 	go ipc.RunUnixSocketServer(ipcBridge, configuration)
-	go arduino.RunArduinoServer(arduinoSendingBridge, arduinoReceivingBridge, configuration)
 	go brain.StartBrain(brainBridge, ipcBridge, configuration, doneBridge, arduinoSendingBridge, arduinoReceivingBridge)
 
 	//Wait for Stop
