@@ -123,14 +123,14 @@ func verifyChecksum(packet ArduinoPacket) bool {
 
 func write(b []byte) {
 	//n, err := s.Write([]byte("test"))
-	n, err := arduinoSerial.serial.Write(b)
+	_, err := arduinoSerial.serial.Write(b)
 
 	if err != nil {
 		fmt.Println("fatalerror");
 
 		log.Fatal(err)
 	}
-	log.Printf("%q", n)
+	//log.Printf("%q", n)
 }
 
 func sendPacket(packet ArduinoPacket) {
@@ -151,4 +151,7 @@ func sendPacket(packet ArduinoPacket) {
 	}
 
 	write(bs)
+
+	fmt.Println("packet send to arduino")
+
 }

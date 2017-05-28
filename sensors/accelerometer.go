@@ -33,7 +33,7 @@ func startAccel(config configuration.Configuration) {
 		panic(err)
 	}
 
-	timer := time.Tick(250 * time.Millisecond)
+	timer := time.Tick(20 * time.Millisecond)
 
 	for {
 		select {

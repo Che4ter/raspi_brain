@@ -18,6 +18,7 @@ const (
 	START
 	DRIVESTRAIGHT_ONE
 	DRIVESTRAIGHT_BEFORE_CURVE
+	SEARCH_FOR_END
 	DRIVECURVE
 	OBSTACLESTAIR
 	OBSTACLEENTANGLEMENT
@@ -34,6 +35,7 @@ var states = [...]string{
 	"START",
 	"DRIVESTRAIGHT_ONE",
 	"DRIVESTRAIGHT_BEFORE_CURVE",
+	"SEARCH_FOR_END",
 	"DRIVECURVE",
 	"OBSTACLESTAIR",
 	"OBSTACLEENTANGLEMENT",
@@ -46,8 +48,8 @@ var states = [...]string{
 
 type State int
 
-const resendtimeoutduration = 5
-const waitforstarttimeoutduration = 60
+const resendtimeoutduration = 30
+const waitforstarttimeoutduration = 1
 
 // String() function will return the english name
 // that we want out constant State be recognized as
@@ -75,10 +77,13 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 	brainData.currentState = IDLE
 	brainData.arduinoSendingBridge = arduinoSendingBridge
 	brainData.arduinoReceivingBridge = arduinoReceivingBridge
+
 	switchState(INITIALIZE)
 	//https://doc.getqor.com/plugins/transition.html
 	startTime := time.Now()
 	stairPosition := 0
+	//sendCommandSwitchState(configuration.STATE_DRIVE_CURVE_LEFT)
+
 	// Define initial state
 	for {
 		switch brainData.currentState {
@@ -91,6 +96,7 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				fmt.Println("Wait for Accel Sensor Data")
 				orientations = sensors.GetOrientations()
 			}
+			sendCommandSwitchState(configuration.STATE_START)
 			switchState(START)
 		case START:
 			if firstTime {
@@ -115,51 +121,57 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 
 		case DRIVESTRAIGHT_ONE:
 			if firstTime {
-				sendCommandSwitchState(configuration.STATE_DRIVE_STRAIGHT)
+				sendCommandSwitchState(configuration.STATE_DRIVE1)
 				firstTime = false
 			}
 
-			if sensors.GetDistanceFront() > 10 {
+			/*if sensors.GetDistanceFront() > 10 {
 				time.Sleep(200)
 			} else {
 				switchState(OBSTACLESTAIR)
-			}
+			}*/
+			switchState(OBSTACLESTAIR)
+
 
 		case OBSTACLESTAIR:
 			if firstTime {
 				sendCommandSwitchState(configuration.STATE_OBSTACLE_STAIR)
+				fmt.Println("stair...")
+
 				firstTime = false
 				stairPosition = 0
+
 			}
 
 			orientations := sensors.GetOrientations()
-			fmt.Println("wait for stair")
-
-			if orientations.Y > 25 {
-				time.Sleep(50 * time.Millisecond)
-				fmt.Println("on stair up")
-				stairPosition = 1
-			} else if orientations.Y < 0 {
-				time.Sleep(50 * time.Millisecond)
-				orientations = sensors.GetOrientations()
-				stairPosition = 2
-				fmt.Println("on stair down")
-			} else if orientations.Y > 3 && orientations.Y < 18 && stairPosition == 2 {
-				fmt.Println("stair finished")
+			//fmt.Println(orientations.X,orientations.Y,orientations.Z)
+			if stairPosition == 0 && orientations.Y < -200 && orientations.X > 10 {
+				time.Sleep(1 * time.Second)
 				switchState(DRIVESTRAIGHT_BEFORE_CURVE)
 			}
+
 		case DRIVESTRAIGHT_BEFORE_CURVE:
 			if firstTime {
-				sendCommandSwitchState(configuration.STATE_DRIVE_STRAIGHT)
+				sendCommandSwitchState(configuration.STATE_BEFORE_CURVE)
+				firstTime = false
+				//time.Sleep(20 * time.Second)
 			}
+		case SEARCH_FOR_END:
 
 		case IDLE:
 		case DONE:
 			doneBridge <- true
 
 		case RESET:
-			fmt.Println("reset program")
-			switchState(INITIALIZE)
+			if firstTime {
+				sendCommandStop()
+				time.Sleep(3 * time.Second)
+				firstTime = false
+			} else{
+				switchState(INITIALIZE)
+
+			}
+
 
 		}
 		checkForData()
@@ -178,7 +190,15 @@ func checkForData() {
 
 func checkButton() {
 	if sensors.GetButtonStatus() == 0 {
+		fmt.Println("button detected")
+		if brainData.currentState == RESET {
+			switchState(INITIALIZE)
+
+		} else
+		{
 		switchState(RESET)
+
+		}
 	}
 }
 
@@ -222,7 +242,9 @@ func sendCommandStop() {
 }
 
 func sendPacket(packet arduino.ArduinoPacket) bool {
+	fmt.Println("try to send packet")
 	brainData.arduinoSendingBridge <- packet
+	return true
 
 	startTime := time.Now()
 	var resendCounter = 0
@@ -230,8 +252,14 @@ func sendPacket(packet arduino.ArduinoPacket) bool {
 		select {
 		case result := <-brainData.arduinoReceivingBridge:
 			fmt.Println("received response")
+			fmt.Println("packet id " ,result.ID)
+			fmt.Println("packet type " ,result.TYPE)
+
+
 			if result.ID == packet.ID && result.TYPE == configuration.RESPONSE {
 				fmt.Println("response correct")
+
+
 				return true
 			}
 		default:
@@ -241,6 +269,8 @@ func sendPacket(packet arduino.ArduinoPacket) bool {
 			if diffTime.Seconds() > resendtimeoutduration {
 				fmt.Println("resend")
 				brainData.arduinoSendingBridge <- packet
+				startTime = time.Now()
+				resendCounter++
 			}
 		}
 		if resendCounter >= 2 {
