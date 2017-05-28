@@ -32,7 +32,7 @@ func init() {
 }
 
 func main() {
-	configuration, _ := configuration.ParseConfiguration(configFile)
+	conf, _ := configuration.ParseConfiguration(configFile)
 
 	//Define Channels
 	arduinoSendingBridge := make(chan arduino.ArduinoPacket)
@@ -42,9 +42,10 @@ func main() {
 	doneBridge := make(chan bool)
 
 	//Start Routines
-	go ipc.RunUnixSocketServer(ipcBridge, configuration)
-	go brain.StartBrain(brainBridge, ipcBridge, configuration, doneBridge, arduinoSendingBridge, arduinoReceivingBridge)
+	go ipc.RunUnixSocketServer(ipcBridge, conf)
+	go arduino.RunArduinoServer(arduinoSendingBridge, arduinoReceivingBridge, conf)
 
+	go brain.StartBrain(brainBridge, ipcBridge, conf, doneBridge, arduinoSendingBridge, arduinoReceivingBridge)
 	//Wait for Stop
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, os.Kill)

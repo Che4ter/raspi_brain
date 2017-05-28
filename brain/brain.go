@@ -67,7 +67,7 @@ type brainStruct struct {
 var brainData brainStruct
 var firstTime = false
 
-func StartBrain(brainBridge chan int, ipcBridge chan string, config configuration.Configuration, doneBridge chan bool, arduinoReceivingBridge chan arduino.ArduinoPacket, arduinoSendingBridge chan arduino.ArduinoPacket) {
+func StartBrain(brainBridge chan int, ipcBridge chan string, config configuration.Configuration, doneBridge chan bool, arduinoSendingBridge chan arduino.ArduinoPacket, arduinoReceivingBridge chan arduino.ArduinoPacket) {
 
 	brainData.brainBridge = brainBridge
 	brainData.ipcBridge = ipcBridge
@@ -91,7 +91,6 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				fmt.Println("Wait for Accel Sensor Data")
 				orientations = sensors.GetOrientations()
 			}
-			//sendCommandSwitchState(configuration.STATE_START)
 			switchState(START)
 		case START:
 			if firstTime {
@@ -236,7 +235,7 @@ func sendPacket(packet arduino.ArduinoPacket) bool {
 				return true
 			}
 		default:
-			fmt.Println("wait for timeout")
+			//fmt.Println("wait for timeout")
 			timeoutTime := time.Now()
 			diffTime := timeoutTime.Sub(startTime)
 			if diffTime.Seconds() > resendtimeoutduration {
@@ -249,6 +248,6 @@ func sendPacket(packet arduino.ArduinoPacket) bool {
 
 			return false
 		}
-		time.Sleep(30)
+		time.Sleep(50 * time.Millisecond)
 	}
 }

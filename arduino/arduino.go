@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"fmt"
 )
 
 type Arduino struct {
@@ -125,6 +126,8 @@ func write(b []byte) {
 	n, err := arduinoSerial.serial.Write(b)
 
 	if err != nil {
+		fmt.Println("fatalerror");
+
 		log.Fatal(err)
 	}
 	log.Printf("%q", n)
