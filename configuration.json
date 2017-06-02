@@ -1,12 +1,16 @@
 {
   "SerialPort": "/dev/tnt0",
-  "SerialPortAutoDetect": false,
+  "SerialPortAutoDetect": true,
   "SerialBaudRate": 9600,
   
   "ParcourDirection": 1,
   
   "UnixSocketAddress": "/tmp/team9.sock",
-  
+  "WaitForSignalTimeout": 5,
+
+  "SpeedStair": 50,
+  "SpeedParcour": 80,
+
   "UltrasonicOutPin": 18,
   "UltrasonicInPin": 17,
 

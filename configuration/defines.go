@@ -7,7 +7,9 @@ const SOH = 0x42
 const SWITCH_STATE = 0x01
 const RESET = 0x11
 const STOP = 0x12
-
+const SET_DIRECTION = 0x13
+const SET_SPEED_STAIR = 0x14
+const SET_SPEED_PARCOUR = 0x15
 //TYPE
 const REQUEST = 0x0
 const RESPONSE = 0x1

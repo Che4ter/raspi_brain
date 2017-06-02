@@ -28,6 +28,7 @@ const (
 	DONE
 	IDLE
 	RESET
+	WAITFORBUTTON
 )
 
 var states = [...]string{
@@ -44,12 +45,12 @@ var states = [...]string{
 	"PRESSBUTTON",
 	"DONE",
 	"IDLE",
-	"RESET"}
+	"RESET",
+	"WAITFORBUTTON"}
 
 type State int
 
 const resendtimeoutduration = 30
-const waitforstarttimeoutduration = 1
 
 // String() function will return the english name
 // that we want out constant State be recognized as
@@ -96,13 +97,26 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				fmt.Println("Wait for Accel Sensor Data")
 				orientations = sensors.GetOrientations()
 			}
-			sendCommandSwitchState(configuration.STATE_START)
-			switchState(START)
+			sendCommandSetSpeedParcour(brainData.config.SpeedParcour)
+			time.Sleep(1*time.Second)
+			sendCommandSetSpeedStair(brainData.config.SpeedStair)
+			time.Sleep(1*time.Second)
+			switchState(WAITFORBUTTON)
+
+		case WAITFORBUTTON:
+			if sensors.GetButtonStatus() == 0 {
+
+				fmt.Println("Startbutton pressed")
+				sendCommandSwitchState(configuration.STATE_START)
+				time.Sleep(1 * time.Second)
+				switchState(START)
+			}
 		case START:
 			if firstTime {
-				firstTime = false
-				startTime = time.Now()
+					firstTime = false
+					startTime = time.Now()
 			}
+
 			select {
 			case datafromcamera := <-brainData.ipcBridge:
 				if datafromcamera == "start" {
@@ -112,7 +126,7 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			default:
 				timeoutTime := time.Now()
 				diffTime := timeoutTime.Sub(startTime)
-				if diffTime.Seconds() > waitforstarttimeoutduration {
+				if diffTime.Seconds() > brainData.config.WaitForSignalTimeout {
 					fmt.Println("start signal timeout exceeded")
 					fmt.Println("start without traffic light signal...")
 					switchState(DRIVESTRAIGHT_ONE)
@@ -163,16 +177,10 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			doneBridge <- true
 
 		case RESET:
-			if firstTime {
-				sendCommandStop()
-				time.Sleep(3 * time.Second)
+				sendCommandReset()
+				time.Sleep(4 * time.Second)
 				firstTime = false
-			} else{
 				switchState(INITIALIZE)
-
-			}
-
-
 		}
 		checkForData()
 		checkButton()
@@ -189,7 +197,7 @@ func checkForData() {
 }
 
 func checkButton() {
-	if sensors.GetButtonStatus() == 0 {
+	if sensors.GetButtonStatus() == 0 && brainData.currentState != WAITFORBUTTON{
 		fmt.Println("button detected")
 		if brainData.currentState == RESET {
 			switchState(INITIALIZE)
@@ -220,6 +228,30 @@ func sendCommandSwitchState(STATEID int) {
 	packet.DATA[0] = STATEID
 	sendPacket(packet)
 }
+
+
+func sendCommandSetSpeedStair(speed int) {
+	packet := arduino.ArduinoPacket{
+		SOH:    configuration.SOH,
+		ID:     configuration.SET_SPEED_STAIR,
+		TYPE:   configuration.REQUEST,
+		LENGTH: 1,
+		DATA:   make([]int, 1)}
+	packet.DATA[0] = speed
+	sendPacket(packet)
+}
+
+func sendCommandSetSpeedParcour(speed int) {
+	packet := arduino.ArduinoPacket{
+		SOH:    configuration.SOH,
+		ID:     configuration.SET_SPEED_PARCOUR,
+		TYPE:   configuration.REQUEST,
+		LENGTH: 1,
+		DATA:   make([]int, 1)}
+	packet.DATA[0] = speed
+	sendPacket(packet)
+}
+
 
 func sendCommandReset() {
 	packet := arduino.ArduinoPacket{
