@@ -30,7 +30,7 @@ func GetDistanceFront() float64 {
 }
 
 func initUltrasonic(config configuration.Configuration) {
-	fmt.Print("init Ultrasonic Sensor")
+	fmt.Println("init Ultrasonic Sensor")
 	fmt.Println("init echo pin on ", config.UltrasonicInPin)
 
 	echoPin, err := embd.NewDigitalPin(config.UltrasonicInPin)

@@ -27,11 +27,10 @@ func initStartButton(config configuration.Configuration) {
 	StartButton.echoPin.SetDirection(embd.In)
 	time.Sleep(100* time.Millisecond)
 
-	val, err := StartButton.echoPin.Read()
+	_, err = StartButton.echoPin.Read()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("reading button: %v\n", val)
 }
 
 func GetButtonStatus() int{

@@ -9,29 +9,26 @@ import (
 )
 
 type Toggle struct {
-	echoPin    embd.DigitalPin
+	echoPin embd.DigitalPin
 }
 
 var DirectionToggle Toggle
 
 func initDirectionToggle(config configuration.Configuration) {
-	fmt.Print("init Directiontoggle")
+	fmt.Println("init Directiontoggle")
 	fmt.Println("init direction pin on ", config.ToggleSwitchPin)
 
 	DirectionToggle.echoPin, _ = embd.NewDigitalPin(config.ToggleSwitchPin)
 
 	DirectionToggle.echoPin.SetDirection(embd.In)
 	DirectionToggle.echoPin.ActiveLow(true)
-	time.Sleep(100* time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 }
 
-func GetDirection() int{
-
-		val, err := DirectionToggle.echoPin.Read()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("reading direction: %v\n", val)
-
+func GetDirection() int {
+	val, err := DirectionToggle.echoPin.Read()
+	if err != nil {
+		panic(err)
+	}
 	return val
 }

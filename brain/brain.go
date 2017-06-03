@@ -50,8 +50,6 @@ var states = [...]string{
 
 type State int
 
-const resendtimeoutduration = 30
-
 // String() function will return the english name
 // that we want out constant State be recognized as
 func (state State) String() string {
@@ -97,6 +95,15 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				fmt.Println("Wait for Accel Sensor Data")
 				orientations = sensors.GetOrientations()
 			}
+			direction := sensors.GetDirection()
+			fmt.Println("*****************************")
+			if direction == 0{
+				fmt.Println("Direction: Right Parcour")
+			}else {
+				fmt.Println("Direction: Left Parcour")
+			}
+			fmt.Println("*****************************")
+			sendCommandSetDirection(direction)
 			sendCommandSetSpeedParcour(brainData.config.SpeedParcour)
 			time.Sleep(1*time.Second)
 			sendCommandSetSpeedStair(brainData.config.SpeedStair)
@@ -171,6 +178,10 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				//time.Sleep(20 * time.Second)
 			}
 		case SEARCH_FOR_END:
+			if firstTime{
+				firstTime = false
+			}
+
 
 		case IDLE:
 		case DONE:
@@ -231,6 +242,7 @@ func sendCommandSwitchState(STATEID int) {
 
 
 func sendCommandSetSpeedStair(speed int) {
+	fmt.Println("Send Packet to Arduino: set Stair speed to: ", speed)
 	packet := arduino.ArduinoPacket{
 		SOH:    configuration.SOH,
 		ID:     configuration.SET_SPEED_STAIR,
@@ -242,6 +254,7 @@ func sendCommandSetSpeedStair(speed int) {
 }
 
 func sendCommandSetSpeedParcour(speed int) {
+	fmt.Println("Send Packet to Arduino: set Parcour speed to: ", speed)
 	packet := arduino.ArduinoPacket{
 		SOH:    configuration.SOH,
 		ID:     configuration.SET_SPEED_PARCOUR,
@@ -252,8 +265,22 @@ func sendCommandSetSpeedParcour(speed int) {
 	sendPacket(packet)
 }
 
+func sendCommandSetDirection(direction int) {
+	fmt.Println("Send Packet to Arduino: set Direction to: ", direction)
+	packet := arduino.ArduinoPacket{
+		SOH:    configuration.SOH,
+		ID:     configuration.SET_DIRECTION,
+		TYPE:   configuration.REQUEST,
+		LENGTH: 1,
+		DATA:   make([]int, 1)}
+	packet.DATA[0] = direction
+	sendPacket(packet)
+}
+
 
 func sendCommandReset() {
+	fmt.Println("Send Packet to Arduino: reset")
+
 	packet := arduino.ArduinoPacket{
 		SOH:    configuration.SOH,
 		ID:     configuration.RESET,
@@ -264,6 +291,7 @@ func sendCommandReset() {
 }
 
 func sendCommandStop() {
+	fmt.Println("Send Packet to Arduino: stop")
 	packet := arduino.ArduinoPacket{
 		SOH:    configuration.SOH,
 		ID:     configuration.STOP,
@@ -274,42 +302,8 @@ func sendCommandStop() {
 }
 
 func sendPacket(packet arduino.ArduinoPacket) bool {
-	fmt.Println("try to send packet")
+	//fmt.Println("try to send packet ")
 	brainData.arduinoSendingBridge <- packet
+
 	return true
-
-	startTime := time.Now()
-	var resendCounter = 0
-	for {
-		select {
-		case result := <-brainData.arduinoReceivingBridge:
-			fmt.Println("received response")
-			fmt.Println("packet id " ,result.ID)
-			fmt.Println("packet type " ,result.TYPE)
-
-
-			if result.ID == packet.ID && result.TYPE == configuration.RESPONSE {
-				fmt.Println("response correct")
-
-
-				return true
-			}
-		default:
-			//fmt.Println("wait for timeout")
-			timeoutTime := time.Now()
-			diffTime := timeoutTime.Sub(startTime)
-			if diffTime.Seconds() > resendtimeoutduration {
-				fmt.Println("resend")
-				brainData.arduinoSendingBridge <- packet
-				startTime = time.Now()
-				resendCounter++
-			}
-		}
-		if resendCounter >= 2 {
-			fmt.Println("sending failed")
-
-			return false
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
 }

@@ -69,7 +69,7 @@ func RunArduinoServer(arduinoSendingBridge chan ArduinoPacket, arduinoReceivingB
 
 	arduinoSerial = Arduino{arduinoReceivingBridge, arduinoSendingBridge, config, s}
 
-	go read()
+	//go read()
 
 	for {
 		arduinoPacket := <-arduinoSerial.arduinoSendingBridge

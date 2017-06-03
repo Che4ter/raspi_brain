@@ -8,8 +8,8 @@
   "UnixSocketAddress": "/tmp/team9.sock",
   "WaitForSignalTimeout": 5,
 
-  "SpeedStair": 50,
-  "SpeedParcour": 80,
+  "SpeedStair": 100,
+  "SpeedParcour": 85,
 
   "UltrasonicOutPin": 18,
   "UltrasonicInPin": 17,
