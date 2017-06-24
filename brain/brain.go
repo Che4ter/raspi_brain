@@ -6,6 +6,7 @@ import (
 	"github.com/Che4ter/rpi_brain/configuration"
 	"github.com/Che4ter/rpi_brain/sensors"
 	"time"
+	"strconv"
 )
 
 type Logic struct {
@@ -126,6 +127,8 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 
 			select {
 			case datafromcamera := <-brainData.ipcBridge:
+				fmt.Println("received ipcv: ", datafromcamera)
+
 				if datafromcamera == "start" {
 					fmt.Println("received startsignal: ", datafromcamera)
 					switchState(DRIVESTRAIGHT_ONE)
@@ -195,7 +198,22 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 		}
 		checkForData()
 		checkButton()
+		checkForNumber()
 	}
+}
+
+func checkForNumber() {
+	if brainData.currentState != START {
+		select {
+		case datafromcamera := <-brainData.ipcBridge:
+			i, _ := strconv.Atoi(datafromcamera)
+			if i > 0 && i <= 5 {
+				sendCommandSetDigit(i)
+			}
+		default:
+		}
+	}
+
 }
 
 func checkForData() {
@@ -237,6 +255,19 @@ func sendCommandSwitchState(STATEID int) {
 		LENGTH: 1,
 		DATA:   make([]int, 1)}
 	packet.DATA[0] = STATEID
+	sendPacket(packet)
+}
+
+
+func sendCommandSetDigit(digit int) {
+	fmt.Println("Send Digit to Arduino:", digit)
+	packet := arduino.ArduinoPacket{
+		SOH:    configuration.SOH,
+		ID:     configuration.SET_DIGIT,
+		TYPE:   configuration.REQUEST,
+		LENGTH: 1,
+		DATA:   make([]int, 1)}
+	packet.DATA[0] = digit
 	sendPacket(packet)
 }
 
