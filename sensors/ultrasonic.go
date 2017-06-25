@@ -1,12 +1,12 @@
 package sensors
 
 import (
+	"fmt"
 	"github.com/Che4ter/rpi_brain/configuration"
 	"github.com/Che4ter/rpi_brain/utilities"
 	"github.com/kidoman/embd"
 	_ "github.com/kidoman/embd/host/rpi" // This loads the RPi driver
 	"github.com/kidoman/embd/sensor/us020"
-	"fmt"
 	"time"
 )
 

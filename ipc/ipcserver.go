@@ -18,7 +18,7 @@ func dataHandler(c net.Conn, ipcBridge chan string) {
 			return
 		}
 
-		data := string(buf[0 : nr])
+		data := string(buf[0:nr])
 
 		fmt.Println("received Data from unix socket:")
 

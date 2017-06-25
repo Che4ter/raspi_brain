@@ -5,8 +5,8 @@ import (
 	"github.com/Che4ter/rpi_brain/arduino"
 	"github.com/Che4ter/rpi_brain/configuration"
 	"github.com/Che4ter/rpi_brain/sensors"
-	"time"
 	"strconv"
+	"time"
 )
 
 type Logic struct {
@@ -15,7 +15,7 @@ type Logic struct {
 
 //virutal serial http://www.sagunpandey.com/setup-virtual-serial-ports-using-tty0tty-in-linux/
 const (
-	INITIALIZE           = 1 + iota
+	INITIALIZE = 1 + iota
 	START
 	DRIVESTRAIGHT_ONE
 	DRIVESTRAIGHT_BEFORE_CURVE
@@ -98,17 +98,17 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			}
 			direction := sensors.GetDirection()
 			fmt.Println("*****************************")
-			if direction == 0{
+			if direction == 0 {
 				fmt.Println("Direction: Right Parcour")
-			}else {
+			} else {
 				fmt.Println("Direction: Left Parcour")
 			}
 			fmt.Println("*****************************")
 			sendCommandSetDirection(direction)
 			sendCommandSetSpeedParcour(brainData.config.SpeedParcour)
-			time.Sleep(1*time.Second)
+			time.Sleep(1 * time.Second)
 			sendCommandSetSpeedStair(brainData.config.SpeedStair)
-			time.Sleep(1*time.Second)
+			time.Sleep(1 * time.Second)
 			switchState(WAITFORBUTTON)
 
 		case WAITFORBUTTON:
@@ -121,8 +121,8 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			}
 		case START:
 			if firstTime {
-					firstTime = false
-					startTime = time.Now()
+				firstTime = false
+				startTime = time.Now()
 			}
 
 			select {
@@ -156,7 +156,6 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			}*/
 			switchState(OBSTACLESTAIR)
 
-
 		case OBSTACLESTAIR:
 			if firstTime {
 				sendCommandSwitchState(configuration.STATE_OBSTACLE_STAIR)
@@ -181,20 +180,19 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				//time.Sleep(20 * time.Second)
 			}
 		case SEARCH_FOR_END:
-			if firstTime{
+			if firstTime {
 				firstTime = false
 			}
-
 
 		case IDLE:
 		case DONE:
 			doneBridge <- true
 
 		case RESET:
-				sendCommandReset()
-				time.Sleep(4 * time.Second)
-				firstTime = false
-				switchState(INITIALIZE)
+			sendCommandReset()
+			time.Sleep(4 * time.Second)
+			firstTime = false
+			switchState(INITIALIZE)
 		}
 		checkForData()
 		checkButton()
@@ -226,14 +224,13 @@ func checkForData() {
 }
 
 func checkButton() {
-	if sensors.GetButtonStatus() == 0 && brainData.currentState != WAITFORBUTTON{
+	if sensors.GetButtonStatus() == 0 && brainData.currentState != WAITFORBUTTON {
 		fmt.Println("button detected")
 		if brainData.currentState == RESET {
 			switchState(INITIALIZE)
 
-		} else
-		{
-		switchState(RESET)
+		} else {
+			switchState(RESET)
 
 		}
 	}
@@ -258,7 +255,6 @@ func sendCommandSwitchState(STATEID int) {
 	sendPacket(packet)
 }
 
-
 func sendCommandSetDigit(digit int) {
 	fmt.Println("Send Digit to Arduino:", digit)
 	packet := arduino.ArduinoPacket{
@@ -270,7 +266,6 @@ func sendCommandSetDigit(digit int) {
 	packet.DATA[0] = digit
 	sendPacket(packet)
 }
-
 
 func sendCommandSetSpeedStair(speed int) {
 	fmt.Println("Send Packet to Arduino: set Stair speed to: ", speed)
@@ -307,7 +302,6 @@ func sendCommandSetDirection(direction int) {
 	packet.DATA[0] = direction
 	sendPacket(packet)
 }
-
 
 func sendCommandReset() {
 	fmt.Println("Send Packet to Arduino: reset")

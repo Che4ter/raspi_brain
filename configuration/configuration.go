@@ -13,22 +13,22 @@ type Configuration struct {
 
 	ParcourDirection int
 
-	UnixSocketAddress string
+	UnixSocketAddress    string
 	WaitForSignalTimeout float64
 
-	SpeedStair int
+	SpeedStair   int
 	SpeedParcour int
 
 	UltrasonicOutPin int
 	UltrasonicInPin  int
 
-	StartButtonPin int
+	StartButtonPin  int
 	ToggleSwitchPin int
 }
 
 func ParseConfiguration(configFile string) (configuration Configuration, err error) {
 	// Create a default configuration.
-	config := Configuration{ "/dev/null", true, 9600, 1, "/tmp/team9.sock", 5,50, 80,18, 17, 22,23}
+	config := Configuration{"/dev/null", true, 9600, 1, "/tmp/team9.sock", 5, 50, 80, 18, 17, 22, 23}
 
 	// Open the configuration file.
 	fmt.Println("try to open config file: ", configFile)

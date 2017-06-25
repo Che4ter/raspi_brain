@@ -1,16 +1,16 @@
 package sensors
 
 import (
-	"github.com/Che4ter/rpi_brain/configuration"
 	"fmt"
+	"github.com/Che4ter/rpi_brain/configuration"
 	"github.com/kidoman/embd"
 	_ "github.com/kidoman/embd/host/rpi" // This loads the RPi driver
 	"time"
 )
 
 type Button struct {
-	config     configuration.Configuration
-	echoPin    embd.DigitalPin
+	config  configuration.Configuration
+	echoPin embd.DigitalPin
 }
 
 var StartButton Button
@@ -25,7 +25,7 @@ func initStartButton(config configuration.Configuration) {
 	}
 	StartButton.echoPin = echoPin
 	StartButton.echoPin.SetDirection(embd.In)
-	time.Sleep(100* time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	_, err = StartButton.echoPin.Read()
 	if err != nil {
@@ -33,7 +33,7 @@ func initStartButton(config configuration.Configuration) {
 	}
 }
 
-func GetButtonStatus() int{
+func GetButtonStatus() int {
 	val, err := StartButton.echoPin.Read()
 	if err != nil {
 		panic(err)

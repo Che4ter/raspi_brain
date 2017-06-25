@@ -1,13 +1,13 @@
 package arduino
 
 import (
+	"fmt"
 	"github.com/Che4ter/rpi_brain/configuration"
 	"github.com/tarm/serial"
 	"io/ioutil"
 	"log"
 	"strings"
 	"time"
-	"fmt"
 )
 
 type Arduino struct {
@@ -18,11 +18,11 @@ type Arduino struct {
 }
 
 type ArduinoPacket struct {
-	SOH      int
-	ID       int
-	TYPE     int
-	LENGTH   int
-	DATA     []int
+	SOH    int
+	ID     int
+	TYPE   int
+	LENGTH int
+	DATA   []int
 }
 
 const timeoutduration = 60
@@ -126,7 +126,7 @@ func write(b []byte) {
 	_, err := arduinoSerial.serial.Write(b)
 
 	if err != nil {
-		fmt.Println("fatalerror");
+		fmt.Println("fatalerror")
 
 		log.Fatal(err)
 	}

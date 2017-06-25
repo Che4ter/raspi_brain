@@ -45,5 +45,3 @@ func startAccel(config configuration.Configuration) {
 		}
 	}
 }
-
-
