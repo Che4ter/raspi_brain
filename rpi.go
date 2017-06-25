@@ -24,7 +24,7 @@ func init() {
 	fmt.Println("***********************")
 	fmt.Println("Pren 2 - Team 9")
 	fmt.Println("== The Caterpillar ==")
-	fmt.Println("**** v1.2 **** ")
+	fmt.Println("**** v1.3 **** ")
 	fmt.Println("***********************")
 	fmt.Println("initializing...")
 

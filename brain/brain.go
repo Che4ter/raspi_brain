@@ -20,12 +20,7 @@ const (
 	DRIVESTRAIGHT_ONE
 	DRIVESTRAIGHT_BEFORE_CURVE
 	SEARCH_FOR_END
-	DRIVECURVE
 	OBSTACLESTAIR
-	OBSTACLEENTANGLEMENT
-	OBSTACLECROSSBARS
-	OBSTACLERAMP
-	PRESSBUTTON
 	DONE
 	IDLE
 	RESET
@@ -38,12 +33,7 @@ var states = [...]string{
 	"DRIVESTRAIGHT_ONE",
 	"DRIVESTRAIGHT_BEFORE_CURVE",
 	"SEARCH_FOR_END",
-	"DRIVECURVE",
 	"OBSTACLESTAIR",
-	"OBSTACLEENTANGLEMENT",
-	"OBSTACLERAMP",
-	"OBSTACLECROSSBARS",
-	"PRESSBUTTON",
 	"DONE",
 	"IDLE",
 	"RESET",
@@ -79,10 +69,8 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 	brainData.arduinoReceivingBridge = arduinoReceivingBridge
 
 	switchState(INITIALIZE)
-	//https://doc.getqor.com/plugins/transition.html
 	startTime := time.Now()
 	stairPosition := 0
-	//sendCommandSwitchState(configuration.STATE_DRIVE_CURVE_LEFT)
 
 	// Define initial state
 	for {
@@ -163,7 +151,6 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 
 				firstTime = false
 				stairPosition = 0
-
 			}
 
 			orientations := sensors.GetOrientations()
@@ -194,7 +181,6 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			firstTime = false
 			switchState(INITIALIZE)
 		}
-		checkForData()
 		checkButton()
 		checkForNumber()
 	}
@@ -210,16 +196,6 @@ func checkForNumber() {
 			}
 		default:
 		}
-	}
-
-}
-
-func checkForData() {
-	select {
-	case receivingPacket := <-brainData.arduinoReceivingBridge:
-		fmt.Println("received data", receivingPacket.ID)
-	default:
-
 	}
 }
 
@@ -327,7 +303,6 @@ func sendCommandStop() {
 }
 
 func sendPacket(packet arduino.ArduinoPacket) bool {
-	//fmt.Println("try to send packet ")
 	brainData.arduinoSendingBridge <- packet
 
 	return true

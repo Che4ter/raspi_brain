@@ -26,8 +26,6 @@ func dataHandler(c net.Conn, ipcBridge chan string) {
 
 		ipcBridge <- data
 	}
-
-	//ipcBridge <- data
 }
 
 func RunUnixSocketServer(ipcBridge chan string, config configuration.Configuration) {

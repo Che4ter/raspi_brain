@@ -25,8 +25,6 @@ type ArduinoPacket struct {
 	DATA   []int
 }
 
-const timeoutduration = 60
-
 var arduinoSerial Arduino
 
 // findArduino looks for the file that represents the arduino serial connection. Returns the fully qualified path
@@ -69,56 +67,10 @@ func RunArduinoServer(arduinoSendingBridge chan ArduinoPacket, arduinoReceivingB
 
 	arduinoSerial = Arduino{arduinoReceivingBridge, arduinoSendingBridge, config, s}
 
-	//go read()
-
 	for {
 		arduinoPacket := <-arduinoSerial.arduinoSendingBridge
 		sendPacket(arduinoPacket)
 	}
-	//Write(arduinoPackage,[]byte{0x00, 0x01, 0x02, 0x03})
-}
-
-func read() {
-	var curLocation = 0
-	var receivingPacket = ArduinoPacket{}
-	for {
-		buf := make([]byte, 1)
-
-		_, err := arduinoSerial.serial.Read(buf)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if buf[0] == configuration.SOH && curLocation == 0 {
-			receivingPacket.SOH = int(buf[0])
-			curLocation++
-
-		} else if curLocation == 1 {
-			receivingPacket.ID = int(buf[0])
-			curLocation++
-		} else if curLocation == 2 {
-			receivingPacket.TYPE = int(buf[0])
-			curLocation++
-		} else if curLocation == 3 {
-			receivingPacket.LENGTH = int(buf[0])
-			receivingPacket.DATA = make([]int, receivingPacket.LENGTH)
-			curLocation++
-
-		} else if curLocation >= 4 && curLocation < (4+receivingPacket.LENGTH) {
-			receivingPacket.DATA[curLocation-4] = int(buf[0])
-			curLocation++
-		} else if curLocation == (4 + receivingPacket.LENGTH) {
-			arduinoSerial.arduinoReceivingBridge <- receivingPacket
-
-			curLocation = 0
-			receivingPacket = ArduinoPacket{}
-		}
-	}
-}
-
-func verifyChecksum(packet ArduinoPacket) bool {
-	return true
 }
 
 func write(b []byte) {
@@ -153,5 +105,4 @@ func sendPacket(packet ArduinoPacket) {
 	write(bs)
 
 	fmt.Println("packet send to arduino")
-
 }
