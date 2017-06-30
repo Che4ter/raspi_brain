@@ -70,7 +70,6 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 
 	switchState(INITIALIZE)
 	startTime := time.Now()
-	stairPosition := 0
 
 	// Define initial state
 	for {
@@ -136,27 +135,18 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				sendCommandSwitchState(configuration.STATE_DRIVE1)
 				firstTime = false
 			}
-
-			/*if sensors.GetDistanceFront() > 10 {
-				time.Sleep(200)
-			} else {
-				switchState(OBSTACLESTAIR)
-			}*/
 			switchState(OBSTACLESTAIR)
 
 		case OBSTACLESTAIR:
 			if firstTime {
-				sendCommandSwitchState(configuration.STATE_OBSTACLE_STAIR)
-				fmt.Println("stair...")
-
+				fmt.Println("wait for stair")
 				firstTime = false
-				stairPosition = 0
 			}
 
 			orientations := sensors.GetOrientations()
 			//fmt.Println(orientations.X,orientations.Y,orientations.Z)
-			if stairPosition == 0 && orientations.Y < -200 && orientations.X > 10 {
-				time.Sleep(1 * time.Second)
+			if orientations.Y < -200 && orientations.X > 10 {
+				time.Sleep(500 * time.Millisecond)
 				switchState(DRIVESTRAIGHT_BEFORE_CURVE)
 			}
 
@@ -164,17 +154,15 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			if firstTime {
 				sendCommandSwitchState(configuration.STATE_BEFORE_CURVE)
 				firstTime = false
-				//time.Sleep(20 * time.Second)
+				switchState(IDLE)
 			}
 		case SEARCH_FOR_END:
 			if firstTime {
 				firstTime = false
 			}
-
 		case IDLE:
 		case DONE:
 			doneBridge <- true
-
 		case RESET:
 			sendCommandReset()
 			time.Sleep(4 * time.Second)
@@ -204,16 +192,13 @@ func checkButton() {
 		fmt.Println("button detected")
 		if brainData.currentState == RESET {
 			switchState(INITIALIZE)
-
 		} else {
 			switchState(RESET)
-
 		}
 	}
 }
 
 func switchState(newState State) {
-
 	fmt.Println("Old State:", brainData.currentState)
 	brainData.currentState = newState
 	fmt.Println("New State:", brainData.currentState)
@@ -304,6 +289,5 @@ func sendCommandStop() {
 
 func sendPacket(packet arduino.ArduinoPacket) bool {
 	brainData.arduinoSendingBridge <- packet
-
 	return true
 }
