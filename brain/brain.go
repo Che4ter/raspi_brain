@@ -25,6 +25,7 @@ const (
 	IDLE
 	RESET
 	WAITFORBUTTON
+	WAITFORSTART
 )
 
 var states = [...]string{
@@ -37,7 +38,8 @@ var states = [...]string{
 	"DONE",
 	"IDLE",
 	"RESET",
-	"WAITFORBUTTON"}
+	"WAITFORBUTTON",
+	"WAITFORSTART"}
 
 type State int
 
@@ -70,6 +72,7 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 
 	switchState(INITIALIZE)
 	startTime := time.Now()
+	direction := 0
 
 	// Define initial state
 	for {
@@ -83,7 +86,7 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 				fmt.Println("Wait for Accel Sensor Data")
 				orientations = sensors.GetOrientations()
 			}
-			direction := sensors.GetDirection()
+			direction = sensors.GetDirection()
 			fmt.Println("*****************************")
 			if direction == 0 {
 				fmt.Println("Direction: Right Parcour")
@@ -101,7 +104,15 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 		case WAITFORBUTTON:
 			if sensors.GetButtonStatus() == 0 {
 
-				fmt.Println("Startbutton pressed")
+				fmt.Println("start Zentrifuge pressed")
+				sendCommandSwitchState(configuration.STATE_START)
+				time.Sleep(1 * time.Second)
+				switchState(WAITFORSTART)
+			}
+		case WAITFORSTART:
+			if sensors.GetButtonStatus() == 0 {
+
+				fmt.Println("wait For Start ")
 				sendCommandSwitchState(configuration.STATE_START)
 				time.Sleep(1 * time.Second)
 				switchState(START)
@@ -116,7 +127,7 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			case datafromcamera := <-brainData.ipcBridge:
 				fmt.Println("received ipcv: ", datafromcamera)
 
-				if datafromcamera == "start" {
+				if datafromcamera == "START" {
 					fmt.Println("received startsignal: ", datafromcamera)
 					switchState(DRIVESTRAIGHT_ONE)
 				}
@@ -144,9 +155,14 @@ func StartBrain(brainBridge chan int, ipcBridge chan string, config configuratio
 			}
 
 			orientations := sensors.GetOrientations()
+			var y = orientations.Y
+			var x = orientations.X
 			//fmt.Println(orientations.X,orientations.Y,orientations.Z)
-			if orientations.Y < -200 && orientations.X > 10 {
+
+			if (direction == 0 && y < -500 && x > 10) || (direction == 1 && y < -290 && x > 10) {
 				time.Sleep(500 * time.Millisecond)
+				fmt.Println("lage sensor !!!!!!!!y")
+
 				switchState(DRIVESTRAIGHT_BEFORE_CURVE)
 			}
 
@@ -188,7 +204,7 @@ func checkForNumber() {
 }
 
 func checkButton() {
-	if sensors.GetButtonStatus() == 0 && brainData.currentState != WAITFORBUTTON {
+	if sensors.GetButtonStatus() == 0 && brainData.currentState != WAITFORBUTTON && brainData.currentState != WAITFORSTART {
 		fmt.Println("button detected")
 		if brainData.currentState == RESET {
 			switchState(INITIALIZE)
